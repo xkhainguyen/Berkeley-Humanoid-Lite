@@ -1,0 +1,26 @@
+[package]
+
+version = "2025.03.17"
+
+# Description
+category = "isaaclab"
+readme  = "README.md"
+
+title = "Berkeley Humanoid Lite"
+author = "Berkeley Humanoid Project Developers"
+maintainer = "Berkeley Humanoid Project Developers"
+description="Training environment for Berkeley Humanoid Lite"
+repository = "https://github.com/HybridRobotics/Berkeley-Humanoid-Lite"
+keywords = ["extension", "isaaclab"]
+
+[dependencies]
+"isaaclab" = {}
+"isaaclab_assets" = {}
+"isaaclab_mimic" = {}
+"isaaclab_rl" = {}
+"isaaclab_tasks" = {}
+
+[[python.module]]
+name = "berkeley_humanoid_lite"
+
+[isaaclab_settings]
