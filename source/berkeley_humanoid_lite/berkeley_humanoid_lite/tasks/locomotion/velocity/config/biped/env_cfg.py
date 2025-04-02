@@ -11,7 +11,7 @@ from isaaclab.utils import configclass
 
 import berkeley_humanoid_lite.tasks.locomotion.velocity.mdp as mdp
 from berkeley_humanoid_lite.tasks.locomotion.velocity.velocity_env_cfg import LocomotionVelocityEnvCfg
-from berkeley_humanoid_lite_assets.robots.berkeley_humanoid_lite import HUMANOID_LITE_CFG, HUMANOID_LITE_BIPED_CFG, HUMANOID_LITE_LEG_JOINTS
+from berkeley_humanoid_lite_assets.robots.berkeley_humanoid_lite import HUMANOID_LITE_BIPED_CFG, HUMANOID_LITE_LEG_JOINTS
 
 
 @configclass
@@ -93,31 +93,14 @@ class ActionsCfg:
 class RewardsCfg:
     """Reward terms for the MDP."""
 
-    # -- task
-    track_lin_vel_xy_exp = RewTerm(
-        func=mdp.track_lin_vel_xy_yaw_frame_exp,
-        weight=1.0,
-        params={"command_name": "base_velocity", "std": 0.5},
-    )
-    track_ang_vel_z_exp = RewTerm(
-        func=mdp.track_ang_vel_z_world_exp,
-        weight=1.0,
-        params={"command_name": "base_velocity", "std": 0.5},
-    )
-
-    # -- penalties
+    # === Reward for basic survival ===
+    # termination penalty
     termination_penalty = RewTerm(
         func=mdp.is_terminated,
         weight=-10.0,
     )
-    undesired_contacts = RewTerm(
-        func=mdp.undesired_contacts,
-        weight=-1.0,
-        params={
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=["base", ".*_hip_.*", ".*_knee_.*"]),
-            "threshold": 1.0,
-        },
-    )
+
+    # motion smoothness
     lin_vel_z_l2 = RewTerm(
         func=mdp.lin_vel_z_l2,
         weight=-0.1,
@@ -126,6 +109,13 @@ class RewardsCfg:
         func=mdp.ang_vel_xy_l2,
         weight=-0.05,
     )
+    # ensure the robot is standing upright
+    flat_orientation_l2 = RewTerm(
+        func=mdp.flat_orientation_l2,
+        weight=-5.0,
+    )
+
+    # joint efforts
     dof_torques_l2 = RewTerm(
         func=mdp.joint_torques_l2,
         weight=-2.0e-5,
@@ -144,6 +134,30 @@ class RewardsCfg:
         func=mdp.action_rate_l2,
         weight=-0.001,
     )
+
+    # === Reward for task-space performance ===
+    # command tracking performance
+    track_lin_vel_xy_exp = RewTerm(
+        func=mdp.track_lin_vel_xy_yaw_frame_exp,
+        weight=1.0,
+        params={"command_name": "base_velocity", "std": 0.5},
+    )
+    track_ang_vel_z_exp = RewTerm(
+        func=mdp.track_ang_vel_z_world_exp,
+        weight=1.0,
+        params={"command_name": "base_velocity", "std": 0.5},
+    )
+
+    undesired_contacts = RewTerm(
+        func=mdp.undesired_contacts,
+        weight=-1.0,
+        params={
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=["base", ".*_hip_.*", ".*_knee_.*"]),
+            "threshold": 1.0,
+        },
+    )
+
+    # encourage robot to take steps
     feet_air_time = RewTerm(
         func=mdp.feet_air_time_positive_biped,
         weight=2.0,
@@ -153,6 +167,7 @@ class RewardsCfg:
             "threshold": 0.5,
         },
     )
+    # penalize feet sliding on the ground to exploit physics sim inaccuracies
     feet_slide = RewTerm(
         func=mdp.feet_slide,
         weight=-0.1,
@@ -162,11 +177,7 @@ class RewardsCfg:
         },
     )
 
-    # -- fintuning penalties
-    # Ensure the robot is standing upright
-    flat_orientation_l2 = RewTerm(func=mdp.flat_orientation_l2, weight=-5.0)
-
-    # Penalize deviation from default of the joints that are not essential for locomotion
+    # penalize deviation from default of the joints that are not essential for locomotion
     joint_deviation_hip = RewTerm(
         func=mdp.joint_deviation_l1,
         weight=-1.0,
@@ -189,10 +200,6 @@ class TerminationsCfg:
         func=mdp.time_out,
         time_out=True,
     )
-    # base_contact = DoneTerm(
-    #     func=mdp.illegal_contact,
-    #     params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=["base", ".*_hip_.*", ".*_knee_.*"]), "threshold": 1.0},
-    # )
     base_orientation = DoneTerm(
         func=mdp.bad_orientation,
         params={"limit_angle": 0.78, "asset_cfg": SceneEntityCfg("robot", body_names="base")},
@@ -319,8 +326,8 @@ class BerkeleyHumanoidLiteBipedEnvCfg(LocomotionVelocityEnvCfg):
         self.sim.dt = 0.005
 
         # Scene
-        # self.scene.robot = HUMANOID_LITE_BIPED_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-        self.scene.robot = HUMANOID_LITE_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.robot = HUMANOID_LITE_BIPED_CFG.replace(prim_path="{ENV_REGEX_NS}/robot")
+        # self.scene.robot = HUMANOID_LITE_CFG.replace(prim_path="{ENV_REGEX_NS}/robot")
 
         # change terrain to flat
         self.scene.terrain.terrain_type = "plane"

@@ -1,5 +1,4 @@
 
-
 # === Policy configurations ===
 policy_checkpoint_path: "checkpoints/policy_biped.onnx"
 
@@ -16,12 +15,12 @@ physics_dt: 0.001    # 1000 Hz
 cutoff_freq: 200.0
 
 # === Articulation configurations ===
-num_joints: 22
+num_joints: 12
 joint_kp: 20
 joint_kd: 2
 effort_limits: 7.5
-default_base_position: [0.0, 0.0, 0.6]
-default_joint_positions: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.2, 0.4, -0.3, 0.0, 0.0, 0.0, -0.2, 0.4, -0.3, 0.0]
+default_base_position: [0.0, 0.0, 0.0]
+default_joint_positions: [0.0, 0.0, -0.2, 0.4, -0.3, 0.0, 0.0, 0.0, -0.2, 0.4, -0.3, 0.0]
 
 # === Observation configurations ===
 num_observations: 45
@@ -33,18 +32,18 @@ command_velocity: [0.0, 0.0, 0.0]
 # === Action configurations ===
 num_actions: 12
 action_indices:
+- 0
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+- 7
+- 8
+- 9
 - 10
 - 11
-- 12
-- 13
-- 14
-- 15
-- 16
-- 17
-- 18
-- 19
-- 20
-- 21
 action_scale: 0.25
 action_limit_lower: -200
 action_limit_upper: 200
